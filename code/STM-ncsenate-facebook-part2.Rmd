@@ -140,7 +140,7 @@ STMresults <- plot.estimateEffect(prep, "Party", method = "difference", cov.valu
 par(mfrow = c(2,2),mar = c(4,4,2,2))
 for (i in 1:k){
   plot.estimateEffect(prep, "Time", method = "continuous", topics = rank[i], model = z,  
-                      main = paste0(topic$topicnames[i],": Topic ",i),
+                      main = paste0(topic$topicnames[i],": Topic ",rank[i]),
                       printlegend = FALSE, ylab = "Exp. Topic Prob", 
                       xlab = "Time (Month, 1 = Jan 2015 to 24 = Dec 2016)", ylim = c(-0.01,0.2)
                       )
@@ -151,7 +151,7 @@ for (i in 1:k){
 
 ```{r}
 # Bathroom Safety, HB2
-par(mfrow = c(1,1),mar = c(4,4,2,2))
+par(mfrow = c(1,1))
 plot.STM(stmFit, type = "perspectives", topics = c(26,16), n = 30, plabels = c("Bathroom Safety","HB2"))
 ```
 

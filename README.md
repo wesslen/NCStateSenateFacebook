@@ -13,7 +13,7 @@ See either Part 1 or Part 2 below for the code and commentary.
 
 For the code on how the data was pulled, see the file [pullFacebook.R](code/pullFacebook.R)
 
-## Sample Plots
+## Results
 
 ![Time Series of the Number of Posts by Political Party](img/STM-senate2.png)
 
@@ -21,4 +21,8 @@ For the code on how the data was pulled, see the file [pullFacebook.R](code/pull
 
 ![Effect of Party on the Topic Prevelance of Posts](img/STM-senate4.png)
 
-![Effect of Month on the Topic Prevelance for Four Sample Topics](img/STM-senate5.png)
+![Effect of Month on the Topic Prevelance of Top Republican Topics](img/STM-senate5.png)
+
+![Effect of Month on the Topic Prevelance of Top Democratic Topics](img/STM-senate6.png)
+
+![Comparison of HB2 and Bathroom Safety Topics](img/STM-senate7.png)
