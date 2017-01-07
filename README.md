@@ -20,3 +20,7 @@ For the code on how the data was pulled, see the file [pullFacebook.R](code/pull
 ![Facebook Topics](img/STM-senate3.png)
 
 ![Effect of Party on the Topic Prevelance of Posts](img/STM-senate4.png)
+
+Note: it will take a few seconds for the interactive network below to load.
+
+{% include code/STM-senate-network.html %}
