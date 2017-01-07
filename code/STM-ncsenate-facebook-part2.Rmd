@@ -1,0 +1,228 @@
+---
+title: "NC State Senate Facebook Posts (Part 2)"
+author: "Ryan Wesslen"
+date: "Jan 1, 2017"
+output: html_document
+---
+  
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE)
+```
+
+### STM Exploration
+
+#### Topic Summary
+
+First, let's load our STM results from Part 1.
+
+```{r}
+load("~/Dropbox (UNC Charlotte)/NCStateSenateFacebook/data/stmFit.RData")
+load("~/Dropbox (UNC Charlotte)/NCStateSenateFacebook/data/out.RData")
+```
+
+Let's explore the size of the topics by their topic proportions.
+
+```{r fig.width = 8, fig.height=8}
+library(stm)
+plot.STM(stmFit, type = "summary", xlim = c(0,.14), n = 5, #labeltype = "frex",
+         main = "NC State Senators' Topics on Facebook", text.cex = 0.8)
+```
+
+I've assigned labels to the topics based on my interpretation of the word-topic probabilities (see next section).
+
+```{r results="hide"}
+topicNames <- labelTopics(stmFit)
+k <- 40
+topic <- data.frame(
+  topicnames = c("Press Conference",
+                 "Local Government",
+                 "Religious Freedom",
+                 "#WeAreNotThis",
+                 "Positive Outlook",
+                 "Pat McCrory",
+                 "Legislation",
+                 "Gerrymandering",
+                 "Supreme Court",
+                 "Voter ID/Fraud",
+
+                 "Presidential Election",
+                 "Campaign Support",
+                 "Health Care",
+                 "Congressional Elections",
+                 "North Carolina",
+                 "HB2",
+                 "Constituent Newsletter",
+                 "Sen Van Duyn Posts",
+                 "God, Family, Freedom",
+                 "Teacher Pay",
+
+                 "#NCPOL and #NCGA",
+                 "Hurricane Matthew",
+                 "Redistricting",
+                 "Taxes",
+                 "Congratulations",
+                 "Bathroom Safety",
+                 "Economy/Jobs",
+                 "Student/Women's Issues",
+                 "Hillary Clinton",
+                 "Church",
+
+                 "Civil Rights",
+                 "Energy Tax Credits",
+                 "Roy Cooper",
+                 "Get Out the Vote",
+                 "Gun Violence",
+                 "Berger Press Releases",
+                 "Public Assistance",
+                 "Town Hall Events",
+                 "Holiday Wishes",
+                 "Conservative Values"),
+  TopicNumber = 1:k,
+  TopicProportions = colMeans(stmFit$theta))
+```
+
+#### Interpretating the Topics
+
+```{r fig.width=8}
+par(mfrow = c(4,2),mar = c(1, 1, 2, 1))
+for (i in 1:k){
+  plot.STM(stmFit, type = "labels", n = 15, 
+           topics = i, main = paste0(topic$topicnames[i]," - Raw Probabilities"),
+           width = 55)
+  plot.STM(stmFit, type = "labels", n = 15, 
+           topics = i, main = paste0(topic$topicnames[i]," - FREX"), 
+           labeltype = "frex", width = 55)
+}
+```
+
+```{r}
+#shortdoc <- substr(subset(fbData$ID,out$meta$ID),1,200))
+#thoughts3 <- findThoughts(stmFit, texts = shortdoc, n = 2, topics = 2)
+```
+
+```{r fig.height=6}
+par(mfrow = c(1,1),mar = c(2, 2, 2, 2))
+topicQuality(stmFit,
+             documents = out$documents, 
+             main = "Topic Interpretability: Exclusivity and Semantic Coherence")
+```
+
+```{r fig.height=10, fig.width=8}
+prep <- estimateEffect(1:k ~ Party + s(Time), stmFit, meta = out$meta, uncertainty = "Global")
+
+Result <- plot.estimateEffect(prep, "Party", method = "difference", 
+                              cov.value1 = "Democratic", cov.value2 = "Republican", 
+                              verbose.labels = F, 
+                              ylab = "Expected Difference in Topic Probability by Party \n (with 95% Confidence Intervals)", 
+                              xlab = "More Likely Republican                         Not Significant                          More Likely Democratic",
+                              main = "Effect of Party on Topic Prevelance for Facebook Posts of NC State Senators",
+                              xlim = c(-0.08,0.08))
+
+# order based on Expected Topic Proportion
+rank = order(unlist(Result$means))
+topic <- topic[rank,]
+
+par(mfrow = c(1,1),mar = c(6, 6, 4, 4))
+STMresults <- plot.estimateEffect(prep, "Party", method = "difference", cov.value1 = "Democratic", 
+                                  cov.value2 = "Republican", 
+                                  topics = topic$TopicNumber,
+                                  verbose.labels = F, 
+                                  ylab = "Expected Difference in Topic Probability by Party \n (with 95% Confidence Intervals)", 
+                                  labeltype = "custom",
+                                  xlab = "More Likely Republican                         Not Significant                          More Likely Democratic",
+                                  custom.labels  = topic$topicnames, 
+                                  main = "Effect of Party on Topic Prevelance for Facebook Posts of NC State Senators",
+                                  xlim = c(-.08,0.08))
+```
+
+```{r}
+# time
+par(mfrow = c(2,2),mar = c(4,4,2,2))
+for (i in 1:k){
+  plot.estimateEffect(prep, "Time", method = "continuous", topics = rank[i], model = z,  
+                      main = paste0(topic$topicnames[i],": Topic ",i),
+                      printlegend = FALSE, ylab = "Exp. Topic Prob", 
+                      xlab = "Time (Month, 1 = Jan 2015 to 24 = Dec 2016)", ylim = c(-0.01,0.2)
+                      )
+}
+```
+
+#### Comparing HB2-related Topics
+
+```{r}
+# Bathroom Safety, HB2
+par(mfrow = c(1,1),mar = c(4,4,2,2))
+plot.STM(stmFit, type = "perspectives", topics = c(26,16), n = 30, plabels = c("Bathroom Safety","HB2"))
+```
+
+#### Comparing Governor-related Topics
+
+```{r}
+# Pat McCrory and Roy Cooper
+plot.STM(stmFit, type = "perspectives", topics = c(6,33), n=30, plabels = c("Pat McCrory","Roy Cooper"))
+```
+
+#### Comparing Presidential Election
+
+```{r}
+# Pres Election and Hillary Clinton
+plot.STM(stmFit, type = "perspectives", topics = c(11,29), n=30, plabels = c("Presidential Election","Hillary Clinton"))
+```
+
+
+### Topic Correlations
+
+Let's create an interactive network for the topics (nodes) in which an edge represents a significant correlation between the topic. The size of the node is the prevalence (expected topic proportion) for the topic.
+
+```{r}
+library(igraph); library(visNetwork)
+par(mfrow = c(1,1))
+
+mod.out.corr <- topicCorr(stmFit, cutoff = .025)
+
+#library(corrplot)
+#corrplot(mod.out.corr$cor, order="hclust", hclust.method="ward.D2", method = "circle", type = "lower", diag = F)
+
+#mod.out.corr <- topicCorr(stmFit, method = "huge")
+
+links2 <- as.matrix(mod.out.corr$posadj)
+net2 <- graph_from_adjacency_matrix(links2, mode = "undirected")
+table(V(net2)$type)
+net2 <- simplify(net2, remove.multiple = F, remove.loops = T) 
+
+links <- as_data_frame(net2, what="edges")
+nodes <- as_data_frame(net2, what="vertices")
+
+# Community Detection
+clp <- cluster_label_prop(net2)
+nodes$community <- clp$membership
+
+means <- as.data.frame(unlist(STMresults$means))
+colnames(means) <- "means"
+color <- colorRamp(c("white","blue"))(abs(means$means)/0.05)
+means$colorDem <- rgb(color[,1],color[,2],color[,3],  maxColorValue=255)
+
+color <- colorRamp(c("white","red"))(abs(means$means)/0.05)
+means$colorRep <- rgb(color[,1],color[,2],color[,3],  maxColorValue=255)
+
+means$color <- ifelse(means$means>0,means$colorDem,means$colorRep)
+
+#visNetwork edits
+nodes$shape <- "dot"  
+nodes$shadow <- TRUE # Nodes will drop shadow
+nodes$title <- apply(topicNames$prob, 1, function(x) paste0(x, collapse = " + "))[rank] # Text on click
+nodes$label <- topic$topicnames # Node label
+nodes$size <- (topic$TopicProportions / max(topic$TopicProportions)) * 40 # Node size
+nodes$borderWidth <- 2 # Node border width
+
+nodes$color.background <- means$color
+nodes$color.border <- "black"
+nodes$color.highlight.background <- "orange"
+nodes$color.highlight.border <- "darkred"
+nodes$id <- topic$TopicNumber
+
+visNetwork(nodes, links, width="100%",  height="600px", main="NC State Senator Topic (Correlation) Network") %>% visOptions(highlightNearest = list(enabled = TRUE, algorithm = "hierarchical")) %>% 
+visInteraction(navigationButtons = TRUE) 
+```
+
+
