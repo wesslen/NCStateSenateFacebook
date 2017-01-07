@@ -21,4 +21,4 @@ For the code on how the data was pulled, see the file [pullFacebook.R](code/pull
 
 ![Effect of Party on the Topic Prevelance of Posts](img/STM-senate4.png)
 
-![Effect of Month on the Topic Prevelance for Four Sample Topics](img/STM-senate4.png)
+![Effect of Month on the Topic Prevelance for Four Sample Topics](img/STM-senate5.png)
