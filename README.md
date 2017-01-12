@@ -2,6 +2,8 @@
 
 I've created this GitHub respository that analyzes nearly 7,000 Facebook posts by NC State Senators between Jan 2014 to Dec 2016. Specifically, I use [Strutural Topic Modeling](http://www.structuraltopicmodel.com/) to identify the topics and estimate the effect party has on each topic's prevalence.
 
+I haven't uploaded the data used onto GitHub but email me if you're interested in the raw data.
+
 See either Part 1 or Part 2 below for the code and commentary.
 
 ## HTML Outputs of NC State Senate Facebook Posts
