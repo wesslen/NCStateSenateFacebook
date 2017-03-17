@@ -1,17 +1,20 @@
 ---
 title: "NC State Senate Facebook Posts (Part 2)"
 author: "Ryan Wesslen"
-date: "Jan 4, 2017"
-output: html_document
+date: "Mar 15, 2017"
+output:
+  html_document:
+    toc: true
+    toc_float: true
 ---
   
 ```{r global_options, include=FALSE}
 knitr::opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE)
 ```
 
-### STM Exploration
+## STM Exploration
 
-#### Topic Summary
+### Topic Summary
 
 First, let's load our STM results from Part 1.
 
@@ -24,7 +27,7 @@ Let's explore the size of the topics by their topic proportions.
 
 ```{r fig.width = 8, fig.height=8}
 library(stm)
-plot.STM(stmFit, type = "summary", xlim = c(0,.14), n = 5, #labeltype = "frex",
+plot(stmFit, type = "summary", xlim = c(0,.14), n = 5, #labeltype = "frex",
          main = "NC State Senators' Topics on Facebook", text.cex = 0.8)
 ```
 
@@ -81,15 +84,17 @@ topic <- data.frame(
   TopicProportions = colMeans(stmFit$theta))
 ```
 
-#### Interpretating the Topics
+### Interpretating the Topics
+
+Let's explore the words with the highest (raw) probabilities and the highest FREX (i.e., words that are most frequent and exclusive to the topic). These plots aid in the interpretation of the labels I created in the previous step (and used in the title of each plot).
 
 ```{r fig.width=8}
 par(mfrow = c(4,2),mar = c(1, 1, 2, 1))
 for (i in 1:k){
-  plot.STM(stmFit, type = "labels", n = 15, 
+  plot(stmFit, type = "labels", n = 15, 
            topics = i, main = paste0(topic$topicnames[i]," - Raw Probabilities"),
            width = 55)
-  plot.STM(stmFit, type = "labels", n = 15, 
+  plot(stmFit, type = "labels", n = 15, 
            topics = i, main = paste0(topic$topicnames[i]," - FREX"), 
            labeltype = "frex", width = 55)
 }
@@ -100,6 +105,8 @@ for (i in 1:k){
 #thoughts3 <- findThoughts(stmFit, texts = shortdoc, n = 2, topics = 2)
 ```
 
+We can also plot the exclusivity and semantic coherence, which are two metrics that measure the "interpretability" of each topic. Higher semantic coherence indicate topics that have more consistent words (more interpretable) while exclusivity measures how exclusive the words are to the topic relative to other topics (e.g. low values mean topics that are vague and share a lot of words with other topics while high values indicate words that are very unique/exclusive to the topic).
+
 ```{r fig.height=6}
 par(mfrow = c(1,1),mar = c(2, 2, 2, 2))
 topicQuality(stmFit,
@@ -107,10 +114,14 @@ topicQuality(stmFit,
              main = "Topic Interpretability: Exclusivity and Semantic Coherence")
 ```
 
+### Estimating the Effect of Covariates
+
+One of the main contributions of STM is to provide a mechanism to test (with statistical significance) the impact document-level covariates (e.g. party, time of post) have on the topic proportions (prevalence).
+
 ```{r fig.height=10, fig.width=8}
 prep <- estimateEffect(1:k ~ Party + s(Time), stmFit, meta = out$meta, uncertainty = "Global")
 
-Result <- plot.estimateEffect(prep, "Party", method = "difference", 
+Result <- plot(prep, "Party", method = "difference", 
                               cov.value1 = "Democratic", cov.value2 = "Republican", 
                               verbose.labels = F, 
                               ylab = "Expected Difference in Topic Probability by Party \n (with 95% Confidence Intervals)", 
@@ -123,7 +134,7 @@ rank = order(unlist(Result$means))
 topic <- topic[rank,]
 
 par(mfrow = c(1,1),mar = c(6, 6, 4, 4))
-STMresults <- plot.estimateEffect(prep, "Party", method = "difference", cov.value1 = "Democratic", 
+STMresults <- plot(prep, "Party", method = "difference", cov.value1 = "Democratic", 
                                   cov.value2 = "Republican", 
                                   topics = topic$TopicNumber,
                                   verbose.labels = F, 
@@ -135,41 +146,61 @@ STMresults <- plot.estimateEffect(prep, "Party", method = "difference", cov.valu
                                   xlim = c(-.08,0.08))
 ```
 
+We can also explore the effect of a contiuous covariate like time. In this case, we use month using a b-spline to smooth out our results.
+
+For simplicity, I removed confidence intervals and only plotted the (point) estimates.
+
 ```{r}
 # time
 par(mfrow = c(2,2),mar = c(4,4,2,2))
 for (i in 1:k){
-  plot.estimateEffect(prep, "Time", method = "continuous", topics = rank[i], model = z,  
+  plot(prep, "Time", method = "continuous", topics = rank[i], rank[i], 
                       main = paste0(topic$topicnames[i],": Topic ",rank[i]),
                       printlegend = FALSE, ylab = "Exp. Topic Prob", 
-                      xlab = "Time (Month, 1 = Jan 2015 to 24 = Dec 2016)", ylim = c(-0.01,0.2)
+                      xlab = "Time (Month, 1 = Jan 2015 to 24 = Dec 2016)", ylim = c(-0.02,0.2),
+                      moderator = "Party", moderator.value = "Democratic",  linecol = "blue",
+                      ci.level = 0
                       )
+  plot(prep, "Time", method = "continuous", topics = rank[i], rank[i], 
+                      main = paste0(topic$topicnames[i],": Topic ",rank[i]),
+                      printlegend = FALSE, ylab = "Exp. Topic Prob", 
+                      xlab = "Time (Month, 1 = Jan 2015 to 24 = Dec 2016)", ylim = c(-0.02,0.2),
+                      moderator = "Party", moderator.value = "Republican",  linecol = "red", add = "T", 
+                      ci.level = 0
+  )
+legend(-1, 1.9, c("Democratic", "Republican"), lwd = 2, col = c("blue", "red"))
 }
 ```
+
+### Comparing Topics
+
+We can also visualize ways to compare topics with the "perspectives" graphs.
 
 #### Comparing HB2-related Topics
 
 ```{r}
 # Bathroom Safety, HB2
 par(mfrow = c(1,1))
-plot.STM(stmFit, type = "perspectives", topics = c(26,16), n = 30, plabels = c("Bathroom Safety","HB2"))
+plot(stmFit, type = "perspectives", topics = c(26,16), n = 30, plabels = c("Bathroom Safety","HB2"))
 ```
 
 #### Comparing Governor-related Topics
 
 ```{r}
 # Pat McCrory and Roy Cooper
-plot.STM(stmFit, type = "perspectives", topics = c(6,33), n=30, plabels = c("Pat McCrory","Roy Cooper"))
+plot(stmFit, type = "perspectives", topics = c(6,33), n=30, plabels = c("Pat McCrory","Roy Cooper"))
 ```
 
 #### Comparing Presidential Election
 
 ```{r}
 # Pres Election and Hillary Clinton
-plot.STM(stmFit, type = "perspectives", topics = c(11,29), n=30, plabels = c("Presidential Election","Hillary Clinton"))
+plot(stmFit, type = "perspectives", topics = c(11,29), n=30, plabels = c("Presidential Election","Hillary Clinton"))
 ```
 
 ### Topic Correlations
+
+#### Create Networks
 
 Let's create an interactive network for the topics (nodes) in which an edge represents a significant correlation between the topic. The size of the node is the prevalence (expected topic proportion) for the topic.
 
@@ -219,7 +250,11 @@ nodes$color.border <- "black"
 nodes$color.highlight.background <- "orange"
 nodes$color.highlight.border <- "darkred"
 nodes$id <- topic$TopicNumber
+```
 
+#### Network plot
+
+```{r}
 visNetwork(nodes, links, width="100%",  height="600px", main="NC State Senator Topic (Correlation) Network") %>% visOptions(highlightNearest = list(enabled = TRUE, algorithm = "hierarchical")) %>% 
 visInteraction(navigationButtons = TRUE) 
 ```
